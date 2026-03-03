@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="kk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NuclearLab — Атом және ядро (Phone v2)</title>
+  <style>
+    :root{
+      --bg:#050712; --bg2:#070a1a;
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.68);
+      --stroke:rgba(255,255,255,.14);
+      --card:rgba(255,255,255,.06);
+      --accent:#66e3ff; --accent2:#9b7bff;
+      --good:#7CFF9E; --warn:#FFD37C; --bad:#FF7C9B;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--text);
+      background:
+        radial-gradient(900px 500px at 20% 10%, rgba(102,227,255,.16), transparent 60%),
+        radial-gradient(900px 600px at 80% 15%, rgba(155,123,255,.14), transparent 60%),
+        radial-gradient(900px 700px at 50% 90%, rgba(102,227,255,.08), transparent 60%),
+        linear-gradient(180deg, var(--bg), var(--bg2));
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    .wrap{width:min(980px, calc(100% - 28px)); margin:0 auto; padding:14px 0 28px}
+    .top{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(14px);
+      background: rgba(5,7,18,.55);
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .topInner{width:min(980px, calc(100% - 28px)); margin:0 auto; padding:12px 0; display:flex; gap:12px; align-items:center; justify-content:space-between}
+    .badge{display:inline-flex; gap:8px; align-items:center; padding:6px 10px; border-radius:999px; border:1px solid var(--stroke); background: rgba(255,255,255,.04); color:var(--muted); font-size:12px}
+    .title{font-weight:900; font-size:16px}
+    .sub{color:var(--muted); font-size:12px; margin-top:2px}
+    .card{
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, var(--card), rgba(255,255,255,.03));
+      border-radius:18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+    }
+    .pad{padding:14px}
+    .h1{font-size: clamp(22px, 4.8vw, 36px); line-height:1.08; margin:10px 0 10px; letter-spacing:-.02em}
+    .p{margin:0; color:var(--muted); line-height:1.5}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:10px 14px; border-radius:12px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      color:var(--text); cursor:pointer; user-select:none;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btnPrimary{
+      background: linear-gradient(135deg, rgba(102,227,255,.20), rgba(155,123,255,.14));
+      border-color: rgba(102,227,255,.35);
+    }
+    .btnGhost{background: rgba(0,0,0,.10)}
+    .nav{display:flex; gap:10px; flex-wrap:wrap}
+    .grid{display:grid; gap:14px}
+    @media (min-width: 860px){
+      .grid2{grid-template-columns: 1.2fr .8fr}
+      .grid3{grid-template-columns: repeat(3, 1fr)}
+    }
+    .hr{height:1px; background: linear-gradient(90deg, transparent, var(--stroke), transparent); margin:14px 0}
+    .label{font-size:12px; color:var(--muted); margin:0 0 6px}
+    input, select{
+      width:100%; padding:10px 12px; border-radius:12px;
+      border:1px solid var(--stroke);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      outline:none;
+    }
+    input:focus, select:focus{
+      border-color: rgba(102,227,255,.55);
+      box-shadow: 0 0 0 4px rgba(102,227,255,.10);
+    }
+    .toast{
+      padding:10px 12px; border-radius:14px;
+      border:1px solid var(--stroke); background: rgba(0,0,0,.35);
+    }
+    .small{font-size:12px; color:var(--muted); line-height:1.5}
+    canvas{width:100%; height:380px; display:block; border-radius:14px; background: rgba(0,0,0,.12)}
+    .footer{padding:14px 0; text-align:center; color:var(--muted); font-size:12px}
+    .active{
+      border-color: rgba(102,227,255,.55);
+      box-shadow: 0 0 0 4px rgba(102,227,255,.08);
+    }
+    .pill{border-radius:999px; padding:2px 8px; border:1px solid var(--stroke); background: rgba(0,0,0,.25); font-size:12px; color:rgba(255,255,255,.85)}
+    .ok{border-color: rgba(124,255,158,.35)}
+    .bad{border-color: rgba(255,124,155,.35)}
+    .warn{border-color: rgba(255,211,124,.35)}
+    .kpi{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .kpi .badge{background: rgba(0,0,0,.20)}
+    .lock{
+      opacity:.55;
+      filter: saturate(.7);
+      pointer-events:none;
+    }
+    .spark{
+      position: fixed; inset:0; pointer-events:none; z-index:999;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti" class="spark"></canvas>
+
+  <div class="top">
+    <div class="topInner">
+      <div>
+        <div class="badge">⚛️ NuclearLab · Phone v2</div>
+        <div style="margin-top:8px">
+          <div class="title" id="pageTitle">Басты бет</div>
+          <div class="sub" id="pageSub">Демо + авто есеп + автотексеру</div>
+        </div>
+      </div>
+      <div class="badge">Offline HTML · бір файл</div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="card pad">
+      <div class="nav">
+        <button class="btn btnPrimary active" id="tabHome">Басты бет</button>
+        <button class="btn" id="tabDemo">Демонстрация</button>
+        <button class="btn" id="tabPractice">Практика</button>
+        <button class="btn" id="tabAbout">Қысқаша</button>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+
+    <section id="home" class="grid grid2">
+      <div class="card pad">
+        <div class="badge">✨ Жаңа: автотексеру + “уау” эффект</div>
+        <h1 class="h1">Атом және атом ядросы: демонстрация + есеп + автоматты тексеру</h1>
+        <p class="p">
+          Телефонда бірден ашылады. Практикада оқушы өз жауабын жазады —
+          жүйе <b>дұрыс/қате</b> деп автоматты тексереді, содан кейін ғана толық шешімін ашады.
+        </p>
+        <div class="hr"></div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn btnPrimary" onclick="go('demo')">Демонстрация</button>
+          <button class="btn" onclick="go('practice')">Практика (автотексеру)</button>
+          <span class="badge">Кеңес: <span class="pill">Hint</span> бар</span>
+        </div>
+
+        <div style="height:14px"></div>
+        <div class="grid grid3">
+          <div class="toast"><b>Автотексеру</b><div class="small">Жауап енгіз → тексер → толық шешім ашылады.</div></div>
+          <div class="toast"><b>Streak</b><div class="small">Дұрыс серия жинайсың (уау мотивация).</div></div>
+          <div class="toast"><b>Confetti</b><div class="small">Дұрыс болса — “уау” эффект 🎉</div></div>
+        </div>
+      </div>
+
+      <div class="card pad">
+        <h3 style="margin:0 0 10px">Preview (атом қозғалысы)</h3>
+        <div class="toast small" style="margin-bottom:10px">Төменде қысқа демо. Толық басқару “Демонстрация” бөлімінде.</div>
+        <canvas id="canvasMini"></canvas>
+      </div>
+    </section>
+
+    <section id="demo" style="display:none" class="grid grid2">
+      <div class="card pad">
+        <h3 style="margin:0 0 8px">Атом демонстрациясы + “сурет бойынша түсіндіру”</h3>
+        <p class="p">
+          Төмендегі “Сценарий” батырмаларын бас: платформа өзі jump жасайды және
+          дәл сол сәтті <b>сурет бойынша</b> түсіндіріп береді.
+        </p>
+        <div style="height:12px"></div>
+
+        <canvas id="canvasMain"></canvas>
+
+        <div style="height:12px"></div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap:12px">
+          <div>
+            <div class="label">Қабат саны (n max) · 1..5</div>
+            <input id="layers" type="number" min="1" max="5" value="3">
+          </div>
+          <div>
+            <div class="label">Жылдамдық · 0.3..3</div>
+            <input id="speed" type="number" step="0.1" min="0.3" max="3" value="1">
+          </div>
+          <div>
+            <div class="label">Jump (мақсат қабат)</div>
+            <select id="target">
+              <option value="1">n = 1</option><option value="2">n = 2</option><option value="3" selected>n = 3</option>
+              <option value="4">n = 4</option><option value="5">n = 5</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:10px; align-items:end; flex-wrap:wrap">
+            <button class="btn btnPrimary" id="btnJump">Секіру (jump)</button>
+            <button class="btn" id="btnPause">Тоқтату (pause)</button>
+            <button class="btn" id="btnTrail">Trail: ON</button>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="toast small" id="demoCaption">
+          <b>Сурет бойынша:</b> ядро ортасында, электрон орбита бойымен қозғалады.
+          “Jump” — энергия алғандағы қабат ауысуы.
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="kpi">
+          <span class="badge">Сценарий:</span>
+          <button class="btn btnGhost" onclick="scenario(1)">1) Тұрақты орбита</button>
+          <button class="btn btnGhost" onclick="scenario(2)">2) Энергия беру → жоғары</button>
+          <button class="btn btnGhost" onclick="scenario(3)">3) Энергия шығару → төмен</button>
+        </div>
+      </div>
+
+      <div class="card pad">
+        <h3 style="margin:0 0 8px">Нақты түсіндірме (қорғауға дайын сөздер)</h3>
+        <div class="toast small" id="speech">
+          • Бұл визуализация оқу үшін: электрон “орбитамен” жүреді деп шартты көрсетеміз.<br>
+          • <b>n</b> — энергетикалық деңгей: n өссе, орбита радиусы ұлғаяды.<br>
+          • Электрон жоғары деңгейге өткенде — энергия жұтады, төмен түскенде — энергия бөледі (сәуле шығару).<br>
+          • Ядро (протон/нейтрон) орталықта, электрондар ядроны қоршап тұрады.
+        </div>
+
+        <div style="height:12px"></div>
+        <div class="toast small">
+          Қаласаң, “ядро бөліну (fission)” демосын да қоса аламыз:
+          нейтрон соқтығысу → ядро бөліну → бөлшектер ұшуы → энергия толқыны.
+        </div>
+      </div>
+    </section>
+
+    <section id="practice" style="display:none" class="grid grid2">
+      <div class="card pad">
+        <div class="kpi">
+          <span class="badge">🎯 Практика режимі</span>
+          <span class="badge">Streak: <b id="streak">0</b></span>
+          <span class="badge">Дұрыс: <b id="correct">0</b></span>
+          <span class="badge">Қате: <b id="wrong">0</b></span>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div class="label">Есеп түрі</div>
+        <select id="ptype">
+          <option value="massEnergy">1) Энергия: E = Δm c²</option>
+          <option value="bindingEnergy">2) Байланыс энергиясы (u → MeV)</option>
+          <option value="decay">3) Радиоактивті ыдырау</option>
+        </select>
+
+        <div style="height:12px"></div>
+        <div class="toast small">
+          Ереже: алдымен сен жауап жазасың → <b>“Тексеру”</b> → сонда ғана толық шешім ашылады.
+          Төзімділік (tolerance) — <b>±1%</b>.
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div id="taskCard" class="toast"></div>
+
+        <div style="height:12px"></div>
+
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap:12px">
+          <div>
+            <div class="label">Сенің жауабың</div>
+            <input id="studentAnswer" type="number" placeholder="мысалы: 12.5" />
+            <div class="small" id="unitHint">Өлшем бірлік: …</div>
+          </div>
+          <div>
+            <div class="label">Жауап форматы</div>
+            <select id="answerUnit">
+              <option value="MeV">MeV</option>
+              <option value="J">Дж</option>
+              <option value="eV">eV</option>
+              <option value="N">N (сан)</option>
+            </select>
+            <div class="small">Егер есеп “N” болса, бірлік — жай сан.</div>
+          </div>
+        </div>
+
+        <div style="height:12px"></div>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap">
+          <button class="btn btnPrimary" id="btnCheck">Тексеру ✅</button>
+          <button class="btn" id="btnHint">Hint 💡</button>
+          <button class="btn" id="btnNew">Келесі есеп 🔄</button>
+        </div>
+
+        <div style="height:12px"></div>
+        <div id="feedback" class="toast small">Мұнда нәтиже шығады.</div>
+      </div>
+
+      <div class="card pad">
+        <h3 style="margin:0 0 8px">Толық шешім (тексергеннен кейін ашылады)</h3>
+        <div id="solutionLock" class="toast small lock">
+          🔒 Алдымен “Тексеру” жаса. Дұрыс/қате болғаннан кейін шешім ашылады.
+        </div>
+        <div style="height:12px"></div>
+        <div id="solution" class="toast small lock"></div>
+
+        <div style="height:12px"></div>
+        <h3 style="margin:0 0 8px">Сурет бойынша қысқа түсіндірме</h3>
+        <div id="diagram" class="toast small lock"></div>
+      </div>
+    </section>
+
+    <section id="about" style="display:none" class="grid">
+      <div class="card pad">
+        <h3 style="margin:0 0 8px">Қысқаша</h3>
+        <p class="p">
+          Бұл — офлайн платформа: телефонда бірден ашылады.
+          Ең күшті жері: оқушының жауабын автоматты тексеру және тексергеннен кейін толық шешімді көрсету.
+        </p>
+        <div class="hr"></div>
+        <div class="grid grid3">
+          <div class="toast"><b>Автотексеру</b><div class="small">Tolerance ±1% және түсіндірме.</div></div>
+          <div class="toast"><b>Demo + сценарий</b><div class="small">“Сурет бойынша” сөйлемдер дайын.</div></div>
+          <div class="toast"><b>Wow</b><div class="small">Streak + confetti + next task.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">NuclearLab · Offline HTML v2 · 2026</div>
+  </div>
+
+<script>
+  const sections = ["home","demo","practice","about"];
+  const meta = {
+    home: ["Басты бет","Демо + авто есеп + автотексеру"],
+    demo: ["Демонстрация","Сценарий + сурет бойынша түсіндіру"],
+    practice:["Практика","Оқушы жауабы → автотексеру → шешім"],
+    about:["Қысқаша","Функциялар"]
+  };
+
+  function setActiveBtn(id){
+    ["tabHome","tabDemo","tabPractice","tabAbout"].forEach(x=>{
+      const el = document.getElementById(x);
+      el.classList.remove('active');
+      el.classList.remove('btnPrimary');
+    });
+    const b = document.getElementById(id);
+    b.classList.add('active');
+    b.classList.add('btnPrimary');
+  }
+
+  window.go = function(which){
+    sections.forEach(s => document.getElementById(s).style.display = (s===which ? "" : "none"));
+    const [t,sub] = meta[which];
+    document.getElementById("pageTitle").textContent = t;
+    document.getElementById("pageSub").textContent = sub;
+
+    if(which==="home") setActiveBtn("tabHome");
+    if(which==="demo") setActiveBtn("tabDemo");
+    if(which==="practice") setActiveBtn("tabPractice");
+    if(which==="about") setActiveBtn("tabAbout");
+  }
+
+  document.getElementById("tabHome").onclick = ()=>go("home");
+  document.getElementById("tabDemo").onclick = ()=>go("demo");
+  document.getElementById("tabPractice").onclick = ()=>go("practice");
+  document.getElementById("tabAbout").onclick = ()=>go("about");
+
+  function makeAtom(canvas, opts){
+    const ctx = canvas.getContext("2d");
+    let dpr = Math.max(1, Math.floor(window.devicePixelRatio||1));
+    let w=0,h=0;
+    let angle=0;
+    let layers=opts.layers||3;
+    let speed=opts.speed||1;
+    let trail=opts.trail ?? true;
+    let paused=false;
+    let layer=2;
+    let layerLerp=layer;
+    let jumping=false, jumpT=0, target=3;
+
+    function resize(){
+      const r = canvas.getBoundingClientRect();
+      dpr = Math.max(1, Math.floor(window.devicePixelRatio||1));
+      w = Math.floor(r.width * dpr);
+      h = Math.floor(r.height * dpr);
+      canvas.width = w; canvas.height = h;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    function easeInOut(t){ return t<.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
+
+    function draw(){
+      const cx=w/2, cy=h/2;
+      const minSide = Math.min(w,h);
+      const ядроR = minSide*0.06;
+      const baseOrbit = minSide*0.14;
+      const orbitStep = minSide*0.07;
+
+      if(!trail){
+        ctx.clearRect(0,0,w,h);
+      }else{
+        ctx.fillStyle="rgba(5,7,18,0.14)";
+        ctx.fillRect(0,0,w,h);
+      }
+
+      ctx.globalAlpha = 0.5;
+      for(let i=0;i<6;i++){
+        const sx = (Math.sin(angle*0.1 + i*1.7)*0.5+0.5) * w;
+        const sy = (Math.cos(angle*0.12 + i*1.3)*0.5+0.5) * h;
+        ctx.fillStyle="rgba(255,255,255,0.06)";
+        ctx.beginPath(); ctx.arc(sx,sy,2*dpr,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      for(let n=1;n<=layers;n++){
+        const r = baseOrbit + (n-1)*orbitStep;
+        ctx.strokeStyle="rgba(255,255,255,0.10)";
+        ctx.lineWidth=2*dpr;
+        ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+
+        ctx.fillStyle="rgba(255,255,255,0.45)";
+        ctx.font=`${12*dpr}px ui-sans-serif`;
+        ctx.fillText(`n=${n}`, cx+r+6*dpr, cy+4*dpr);
+      }
+
+      ctx.save(); ctx.translate(cx,cy);
+      ctx.fillStyle="rgba(255,255,255,0.22)";
+      ctx.beginPath(); ctx.arc(-ядроR*0.45,0,ядроR*0.70,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="rgba(102,227,255,0.22)";
+      ctx.beginPath(); ctx.arc(ядроR*0.45,0,ядроR*0.70,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle="rgba(255,255,255,0.16)";
+      ctx.lineWidth=2*dpr;
+      ctx.beginPath(); ctx.arc(0,0,ядроR*1.05,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+
+      if(jumping){
+        jumpT = Math.min(1, jumpT + 0.02*speed);
+        const t = easeInOut(jumpT);
+        layerLerp = layer + (target-layer)*t;
+        if(jumpT>=1){ layer=target; layerLerp=layer; jumpT=0; jumping=false; }
+      }else layerLerp=layer;
+
+      const rE = baseOrbit + (layerLerp-1)*orbitStep;
+      angle += 0.03*speed*(paused?0:1);
+
+      const ex = cx + rE*Math.cos(angle);
+      const ey = cy + rE*Math.sin(angle);
+
+      ctx.fillStyle="rgba(102,227,255,0.10)";
+      ctx.beginPath(); ctx.arc(ex,ey,18*dpr,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="rgba(102,227,255,0.95)";
+      ctx.beginPath(); ctx.arc(ex,ey,5*dpr,0,Math.PI*2); ctx.fill();
+
+      ctx.strokeStyle="rgba(102,227,255,0.12)";
+      ctx.lineWidth=2*dpr;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(ex,ey); ctx.stroke();
+
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+
+    return {
+      setLayers(v){ layers = Math.max(1, Math.min(5, Number(v)||1)); },
+      setSpeed(v){ speed = Math.max(0.3, Math.min(3, Number(v)||1)); },
+      toggleTrail(){ trail = !trail; return trail; },
+      togglePause(){ paused = !paused; return paused; },
+      jumpTo(n){ target = Math.max(1, Math.min(5, Number(n)||1)); jumping=true; }
+    }
+  }
+
+  makeAtom(document.getElementById("canvasMini"), {layers:3, speed:1.2, trail:true});
+
+  const main = makeAtom(document.getElementById("canvasMain"), {layers:3, speed:1, trail:true});
+  const layersInp = document.getElementById("layers");
+  const speedInp  = document.getElementById("speed");
+  const targetSel = document.getElementById("target");
+  const btnJump   = document.getElementById("btnJump");
+  const btnPause  = document.getElementById("btnPause");
+  const btnTrail  = document.getElementById("btnTrail");
+  const demoCaption = document.getElementById("demoCaption");
+
+  layersInp.oninput = ()=> main.setLayers(layersInp.value);
+  speedInp.oninput  = ()=> main.setSpeed(speedInp.value);
+  btnJump.onclick   = ()=>{
+    main.jumpTo(targetSel.value);
+    demoCaption.innerHTML = `<b>Сурет бойынша:</b> электрон <b>n=${targetSel.value}</b> қабатына өтті — бұл энергия деңгейінің өзгеруі.`;
+  };
+  btnPause.onclick  = ()=>{
+    const p = main.togglePause();
+    btnPause.textContent = p ? "Жалғастыру (play)" : "Тоқтату (pause)";
+  };
+  btnTrail.onclick  = ()=>{
+    const t = main.toggleTrail();
+    btnTrail.textContent = t ? "Trail: ON" : "Trail: OFF";
+  };
+
+  window.scenario = (k)=>{
+    if(k===1){
+      main.setLayers(3); layersInp.value=3;
+      main.setSpeed(1); speedInp.value=1;
+      main.jumpTo(2); targetSel.value=2;
+      demoCaption.innerHTML = `<b>1) Тұрақты орбита:</b> электрон белгілі радиуста қозғалады. Ядро орталықта.`;
+    }
+    if(k===2){
+      main.setLayers(5); layersInp.value=5;
+      main.setSpeed(1.2); speedInp.value=1.2;
+      main.jumpTo(4); targetSel.value=4;
+      demoCaption.innerHTML = `<b>2) Энергия беру:</b> электрон жоғары деңгейге өтеді (радиус өседі). Бұл — энергия жұту.`;
+    }
+    if(k===3){
+      main.setLayers(5); layersInp.value=5;
+      main.setSpeed(1.2); speedInp.value=1.2;
+      main.jumpTo(2); targetSel.value=2;
+      demoCaption.innerHTML = `<b>3) Энергия шығару:</b> электрон төмен деңгейге түседі. Бұл — сәуле шығару (энергия бөлу).`;
+    }
+  };
+
+  // Confetti
+  const confCanvas = document.getElementById("confetti");
+  const confCtx = confCanvas.getContext("2d");
+  let confetti = [];
+  function confResize(){
+    const dpr = Math.max(1, window.devicePixelRatio||1);
+    confCanvas.width = Math.floor(innerWidth * dpr);
+    confCanvas.height = Math.floor(innerHeight * dpr);
+    confCanvas.style.width = innerWidth+"px";
+    confCanvas.style.height = innerHeight+"px";
+    confCtx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  addEventListener("resize", confResize);
+  confResize();
+
+  function launchConfetti(){
+    confetti = [];
+    const n = 160;
+    for(let i=0;i<n;i++){
+      confetti.push({
+        x: innerWidth*0.5 + (Math.random()-0.5)*40,
+        y: innerHeight*0.25 + (Math.random()-0.5)*20,
+        vx: (Math.random()-0.5)*6,
+        vy: Math.random()*-6 - 2,
+        g: 0.12 + Math.random()*0.08,
+        r: 2 + Math.random()*3,
+        a: 1,
+      });
+    }
+    let t=0;
+    (function anim(){
+      t++;
+      confCtx.clearRect(0,0,innerWidth, innerHeight);
+      for(const p of confetti){
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.a *= 0.985;
+        confCtx.globalAlpha = p.a;
+        confCtx.fillStyle = Math.random() > 0.5 ? "rgba(102,227,255,0.9)" : "rgba(155,123,255,0.9)";
+        confCtx.beginPath(); confCtx.arc(p.x, p.y, p.r, 0, Math.PI*2); confCtx.fill();
+      }
+      confCtx.globalAlpha = 1;
+      if(t<120) requestAnimationFrame(anim);
+      else confCtx.clearRect(0,0,innerWidth, innerHeight);
+    })();
+  }
+
+  // Practice
+  const c = 299792458;
+  const eV = 1.602176634e-19;
+  const MeV = 1e6 * eV;
+  const u = 1.66053906660e-27;
+  const mp_u = 1.007276466621;
+  const mn_u = 1.00866491588;
+
+  function fmt(n){
+    if(!isFinite(n)) return "—";
+    const abs = Math.abs(n);
+    if(abs===0) return "0";
+    if(abs < 1e-3 || abs > 1e6) return n.toExponential(3);
+    return n.toLocaleString('ru-RU', {maximumFractionDigits: 6});
+  }
+
+  const ptype = document.getElementById("ptype");
+  const taskCard = document.getElementById("taskCard");
+  const studentAnswer = document.getElementById("studentAnswer");
+  const answerUnit = document.getElementById("answerUnit");
+  const unitHint = document.getElementById("unitHint");
+  const btnCheck = document.getElementById("btnCheck");
+  const btnHint = document.getElementById("btnHint");
+  const btnNew = document.getElementById("btnNew");
+  const feedback = document.getElementById("feedback");
+  const solution = document.getElementById("solution");
+  const diagram = document.getElementById("diagram");
+  const lock1 = document.getElementById("solutionLock");
+
+  let state = { streak:0, correct:0, wrong:0, expected:null, expectedUnit:"MeV", hintLevel:0, unlocked:false, task:null };
+
+  function setCounters(){
+    document.getElementById("streak").textContent = state.streak;
+    document.getElementById("correct").textContent = state.correct;
+    document.getElementById("wrong").textContent = state.wrong;
+  }
+
+  function lockSolutions(){
+    state.unlocked = false;
+    lock1.classList.add("lock");
+    solution.classList.add("lock");
+    diagram.classList.add("lock");
+    lock1.textContent = "🔒 Алдымен “Тексеру” жаса. Дұрыс/қате болғаннан кейін шешім ашылады.";
+    solution.textContent = "";
+    diagram.textContent = "";
+  }
+
+  function unlockSolutions(){
+    state.unlocked = true;
+    lock1.classList.remove("lock");
+    solution.classList.remove("lock");
+    diagram.classList.remove("lock");
+    lock1.textContent = "🔓 Шешім ашылды (қадамдап).";
+  }
+
+  function randBetween(a,b){ return a + Math.random()*(b-a); }
+  function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
+
+  function makeTask(){
+    state.hintLevel = 0;
+    lockSolutions();
+    feedback.className = "toast small";
+    feedback.textContent = "Мұнда нәтиже шығады.";
+    studentAnswer.value = "";
+
+    const t = ptype.value;
+    let task = { type: t };
+
+    if(t==="massEnergy"){
+      const dm = Number((randBetween(1e-31, 9e-29)).toExponential(3));
+      task.dm = dm;
+      const E = dm*c*c;
+      const E_MeV = E/MeV;
+      state.expected = E_MeV;
+      state.expectedUnit = "MeV";
+      answerUnit.value = "MeV";
+      unitHint.textContent = "Өлшем бірлік: MeV (қаласаң J/eV таңда)";
+      taskCard.innerHTML = `<b>Есеп:</b> Δm = <span class="pill">${dm}</span> кг. Табу керек: <b>E</b> (MeV).<br><span class="small">Формула: E = Δm c²</span>`;
+      task.steps = ()=>{
+        const lines = [];
+        lines.push(`<b>1) Формула:</b> E = Δm · c²`);
+        if(state.hintLevel>=2) lines.push(`<b>2) Орнына қою:</b> E = ${dm} · (${c})²`);
+        lines.push(`<b>3) Есептеу:</b> E = ${fmt(E)} Дж`);
+        lines.push(`<b>4) Ауыстыру:</b> E = ${fmt(E/MeV)} MeV`);
+        return lines.join("<br>");
+      };
+      task.diagram = `<b>Сурет бойынша:</b> Δm — массалық ақау. c² үлкен болғандықтан, өте кішкентай Δm да үлкен энергия береді.`;
+    }
+
+    if(t==="bindingEnergy"){
+      const Z = randInt(1, 10);
+      const N = randInt(0, 12);
+      const dm_u_target = randBetween(0.001, 0.12);
+      const mNucleus = (Z*mp_u + N*mn_u - dm_u_target);
+      task.Z=Z; task.N=N; task.mNucleus = Number(mNucleus.toFixed(9));
+      const dm_u = Z*mp_u + N*mn_u - task.mNucleus;
+      const dm_kg = dm_u*u;
+      const E = dm_kg*c*c;
+      const E_MeV = E/MeV;
+
+      state.expected = E_MeV;
+      state.expectedUnit = "MeV";
+      answerUnit.value = "MeV";
+      unitHint.textContent = "Өлшем бірлік: MeV";
+      taskCard.innerHTML = `<b>Есеп:</b> Z=<span class="pill">${Z}</span>, N=<span class="pill">${N}</span>, mядро=<span class="pill">${task.mNucleus}</span> u. Табу: <b>Eсв</b> (MeV).<br><span class="small">mp=${mp_u} u, mn=${mn_u} u</span>`;
+      task.steps = ()=>{
+        const lines = [];
+        lines.push(`<b>1) Формула:</b> Eсв = [Z·mp + N·mn − mядро] · c²`);
+        if(state.hintLevel>=2){
+          lines.push(`<b>2) Δm(u):</b> Δm = ${Z}·${mp_u} + ${N}·${mn_u} − ${task.mNucleus} = ${fmt(dm_u)} u`);
+          lines.push(`<b>3) Δm(кг):</b> Δm = ${fmt(dm_u)} · ${u} = ${fmt(dm_kg)} кг`);
+        }
+        lines.push(`<b>4) Энергия:</b> E = ${fmt(E)} Дж ≈ ${fmt(E_MeV)} MeV`);
+        return lines.join("<br>");
+      };
+      task.diagram = `<b>Сурет бойынша:</b> ядро “байланған” жүйе. Δm — бөлшектер массалары қосындысы − ядро массасы. Сол айырма энергияға айналады.`;
+    }
+
+    if(t==="decay"){
+      const N0 = randInt(500, 5000);
+      const lambda = Number(randBetween(0.0002, 0.002).toFixed(6));
+      const tt = randInt(200, 4000);
+      task.N0=N0; task.lambda=lambda; task.t=tt;
+      const N = N0*Math.exp(-lambda*tt);
+      state.expected = N;
+      state.expectedUnit = "N";
+      answerUnit.value = "N";
+      unitHint.textContent = "Өлшем бірлік: N (жай сан)";
+      taskCard.innerHTML = `<b>Есеп:</b> N0=<span class="pill">${N0}</span>, λ=<span class="pill">${lambda}</span> 1/с, t=<span class="pill">${tt}</span> c. Табу: <b>N</b>.<br><span class="small">N = N0·e^(−λt)</span>`;
+      task.steps = ()=>{
+        const lines = [];
+        lines.push(`<b>1) Формула:</b> N = N0 · e^(−λt)`);
+        if(state.hintLevel>=2) lines.push(`<b>2) Орнына қою:</b> N = ${N0} · e^(−${lambda}·${tt})`);
+        lines.push(`<b>3) Есептеу:</b> N ≈ ${fmt(N)}`);
+        return lines.join("<br>");
+      };
+      task.diagram = `<b>Сурет бойынша:</b> λ үлкен болса, ыдырау тез болады. t артса — N азаяды (экспоненциалды заң).`;
+    }
+
+    state.task = task;
+  }
+
+  function convertExpectedTo(unit){
+    const t = state.task?.type;
+    if(!t) return { val: state.expected, unit: state.expectedUnit };
+    if(t==="decay") return { val: state.expected, unit: "N" };
+
+    const E_MeV = state.expected;
+    if(unit==="MeV") return { val: E_MeV, unit:"MeV" };
+    const E_J = E_MeV * MeV;
+    if(unit==="J") return { val: E_J, unit:"J" };
+    const E_eV = E_J / eV;
+    if(unit==="eV") return { val: E_eV, unit:"eV" };
+    return { val: E_MeV, unit:"MeV" };
+  }
+
+  function relError(a,b){
+    const denom = Math.max(1e-12, Math.abs(b));
+    return Math.abs(a-b)/denom;
+  }
+
+  function check(){
+    const ans = Number(studentAnswer.value);
+    if(!isFinite(ans)){
+      feedback.className = "toast small warn";
+      feedback.textContent = "Жауап енгізші (сан болуы керек).";
+      return;
+    }
+
+    const unit = answerUnit.value;
+    const exp = convertExpectedTo(unit);
+    const tol = 0.01;
+    const err = relError(ans, exp.val);
+
+    unlockSolutions();
+    solution.innerHTML = state.task.steps();
+    diagram.innerHTML = state.task.diagram;
+
+    if(err <= tol){
+      state.correct++; state.streak++;
+      setCounters();
+      feedback.className = "toast small ok";
+      feedback.innerHTML = `✅ <b>Дұрыс!</b> Сен: ${fmt(ans)} ${unit}. Күтілетін: ${fmt(exp.val)} ${unit}. (қате: ${(err*100).toFixed(2)}%).`;
+      launchConfetti();
+    }else{
+      state.wrong++; state.streak=0;
+      setCounters();
+      feedback.className = "toast small bad";
+      feedback.innerHTML = `❌ <b>Қате.</b> Сен: ${fmt(ans)} ${unit}, күтілетін: ${fmt(exp.val)} ${unit}. (қате: ${(err*100).toFixed(2)}%).<br>Кеңес: “Hint 💡” басып қайта есепте.`;
+    }
+  }
+
+  function hint(){
+    state.hintLevel = Math.min(2, state.hintLevel + 1);
+    const h = state.hintLevel;
+    if(h===1){
+      feedback.className = "toast small warn";
+      feedback.innerHTML = `💡 <b>Hint 1:</b> Формула: <b>${hintFormula()}</b>`;
+    }else{
+      feedback.className = "toast small warn";
+      feedback.innerHTML = `💡 <b>Hint 2:</b> Енді орнына қою қадамын жазып көр.`;
+    }
+  }
+
+  function hintFormula(){
+    const t = state.task?.type;
+    if(t==="massEnergy") return "E = Δm · c²";
+    if(t==="bindingEnergy") return "Eсв = [Z·mp + N·mn − mядро] · c²";
+    return "N = N0 · e^(−λt)";
+  }
+
+  ptype.onchange = ()=> makeTask();
+  btnCheck.onclick = check;
+  btnHint.onclick = hint;
+  btnNew.onclick = ()=> makeTask();
+  answerUnit.onchange = ()=>{
+    const t = state.task?.type;
+    if(t==="decay"){
+      answerUnit.value = "N";
+      unitHint.textContent = "Өлшем бірлік: N (жай сан)";
+      return;
+    }
+    unitHint.textContent = "Өлшем бірлік: " + answerUnit.value;
+  };
+
+  setCounters();
+  makeTask();
+</script>
+</body>
+</html>
